@@ -20,9 +20,8 @@ type sortCases = [
 
     // Already sorted examples
     Expect<Equal<Sort<[1, 2, 3]>, [1, 2, 3]>>,
-    // Expect<Equal<Sort<[-3, -2, -1]>, [-3, -2, -1]>>,
+    Expect<Equal<Sort<[-3, -2, -1]>, [-3, -2, -1]>>,
     Expect<Equal<Sort<[-2, 0, 2]>, [-2, 0, 2]>>,
-
 
     // Integers in "random" order
     Expect<Equal<Sort<[5, -2, -3, 0, 3]>, [-3, -2, 0, 3, 5]>>,
@@ -41,7 +40,7 @@ type Merge<A extends number[], B extends number[]> =
     Len<A> extends 0
         ? Len<B> extends 0
         ? []
-        : B 
+        : B
     : Len<B> extends 0
         ? A
     // Split both arrays into first and rest. Compare the first elements of each, and accumulate
