@@ -5,9 +5,6 @@ type MergeSort<T extends number[]> =
             ? Merge<MergeSort<EvenSplit>, MergeSort<OddSplit>>
             : T // Will never happen
 
-// @ts-ignore-error
-// type Recurse<S extends [number[], number[]]> = S extends [infer A, infer B] ? Merge<MergeSort<A>, MergeSort<B>> : []
-
 // Gives back two arrays
 type Split<
     T extends number[],

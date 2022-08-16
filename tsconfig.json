@@ -1,9 +1,8 @@
 {
     "compilerOptions": {
-      "module": "None",
+      // Don't want the dom type definitions, since those slow things down
       "lib": ["ES6"],
-      "noImplicitAny": true,
-      "removeComments": false,
-      "preserveConstEnums": true,
+      // There's no JS to emit :)
+      "noEmit": true,
     },
 }
