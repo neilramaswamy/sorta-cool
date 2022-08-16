@@ -54,6 +54,8 @@ type Merge<A extends number[], B extends number[]> =
         : []
     : []
 
+type TupleMerge<K extends [number[], number[]]> = Merge<K[0], K[1]>
+
 type Sort<T extends number[]> = SortWithAcc<T, []>
 
 type SortWithAcc<T extends number[], Acc extends number[]> =
