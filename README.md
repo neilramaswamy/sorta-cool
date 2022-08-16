@@ -14,7 +14,7 @@ I named this "Sorta Cool" for a few reasons:
 
 1. The obvious pun.
 2. It's the type of project which is sort of useless, but also sort of fun. So it's sort of cool (not very cool).
-3. I constantly thought to myself, "I wonder what Shriram would think of this," which reminded me of [Sortacle](https://cs.brown.edu/courses/cs019/2019/sortaclesortacle.html) from Brown's CS 0190 course.
+3. As I wrote this, I constantly thought to myself, "I wonder what Shriram would think of this," which reminded me of [Sortacle](https://cs.brown.edu/courses/cs019/2019/sortaclesortacle.html) from Brown's CS 0190 course.
 
 ### How Does it Work?
 
@@ -72,15 +72,15 @@ I figured I could optimize my types by generating traces while running `tsc`. I 
 ./node_modules/typescript/bin/tsc -p . --generateTrace traces/
 ```
 
-I loaded `traces/trace.json` into [Perfetto](https://ui.perfetto.dev/), and saw that my original `MergeSort` type took ~300ms to compile. And there was a lot of recursion:
+I loaded `traces/trace.json` into [Perfetto](https://ui.perfetto.dev/), and saw that my original `MergeSort` type took ~100ms to compile. And there was a lot of recursion:
 
-<image here>
+![Screenshot from the Perfetto UI showing that the MergeSort file takes 100ms to evaluate, and has too many recursive calls relating to type inference](./images/slow_mergesort.png)
 
 After making a few tweaks, I got `MergeSort`'s `checkSourceFile` call down to less than 10ms:
 
-<image here>
+![Screenshot from the Perfetto UI showing that the MergeSort file takes 9ms to evaluate](./images/fast_mergesort.png)
 
-Finally, I noticed that there was a lot of time spent compiling `dom.d.ts`, so I avoided doing that extra work by setting the environment to `ES5`. I also set `noEmit` to true, which saved a few dozen milliseconds (the JS files were anyway empty).
+Finally, I noticed that about ~800ms were spent compiling `dom.d.ts`, so I avoided doing that extra work by setting the environment to `ES5`. I also set `noEmit` to true, which saved ~15 milliseconds (the JS files were anyway empty). In total, I was able to bring "compilation" (the PL people will hurt me for using that word, since nothing is being compiled... I think) down by ~105ms, which is a 20% decrease!
 
 ### Playing with This
 
