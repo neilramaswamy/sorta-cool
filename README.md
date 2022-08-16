@@ -18,7 +18,7 @@ I named this "Sorta Cool" for a few reasons:
 
 ### How Does it Work?
 
-I'm going to assume strong ability with the following Typescript concepts (soon, I'll update this section to be more accessible to readers who aren't as familiar with these Typescript concepts):
+I'll explain how I implemented Merge Sort below. I'm going to assume strong ability with the following Typescript concepts (soon, I'll update this section to be more accessible to readers who aren't as familiar with these Typescript concepts):
 
 -   [Conditional types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html) (using `extends` and `infer`)
 -   Recursive conditional types
@@ -27,7 +27,7 @@ I'm going to assume strong ability with the following Typescript concepts (soon,
 
 I implemented a numeric comparison type, `Cmp<A, B>` between any two integers. It uses the following logic:
 
--   WLOG, If A is negative but B is non-negative, B is bigger.
+-   WLOG, If A is negative but B is non-negative, B is bigger. I determine whether a number is negative by casting it a string and pattern matching, using template literal types, to `-${infer A}`. If it matches, it's negative.
 -   If A and B are both negative, return `Cmp<Abs<B>, Abs<A>>`, where `Abs<T>` computes the absolute value of some integer. The implementation of `Abs` can be found in `math.ts` which is fairly simple to read.
 -   If A and B are both positive, you'll need to read on...
 
