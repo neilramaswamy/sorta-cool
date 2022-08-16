@@ -20,9 +20,6 @@ type GREATER_THAN = 1
 type Cmp<A extends number, B extends number> = IsNegative<A> extends true
     ? IsNegative<B> extends true
         ? // Both negative. Notice the absolute value, AND the change of position!
-          //
-          // Unfortunately, TS is complaining. But I know what I'm doing (haha...).
-          // @ts-expect-error
           PositiveIntegerCmp<Abs<B>, Abs<A>>
         : // A is negative but B is positive
           LESS_THAN

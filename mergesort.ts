@@ -1,5 +1,5 @@
 type MergeSort<T extends number[]> =
-    // @ts-ignore-error: this code is so reasonable I don't deserved to be yelled at
+    // @ts-expect-error: this code is so reasonable I don't deserved to be yelled at
     Len<T> extends 0 | 1 ? T : Merge<MergeSort<Split<T>[0]>, MergeSort<Split<T>[1]>>
 
 // Gives back two arrays
