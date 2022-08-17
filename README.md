@@ -18,7 +18,7 @@ I named this "Sorta Cool" for a few reasons:
 
 #### Background Knowledge
 
-If you want to understand how this works, you'll need to be familiar with Typescript's recursive conditional types. If you're already familiar, skip to the [next section](#how-does-it-work) I'll try to explain them briefly here.
+If you want to understand how this works, you'll need to be familiar with Typescript's recursive conditional types. If you're already familiar, skip to the [next section](#how-does-it-work). I'll try to explain them briefly here.
 
 A type just provides a nice way to talk about a set of values. The `string` type in Typescript refers to the set of all possible strings. The union type `"alice" | "bob"` refers to the set containing two strings "alice" and "bob".
 
