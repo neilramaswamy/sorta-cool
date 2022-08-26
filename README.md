@@ -76,7 +76,7 @@ Nifty, right? Finally, let's try to figure out how we can strip _all_ leading A'
 type Strip<T extends string> = T extends ` ${infer Rest}` ? Strip<Rest> : T
 
 // "cba", yay!
-Strip<"  cba">
+Strip<'  cba'>
 ```
 
 In sum, we have the following building blocks:
@@ -93,7 +93,7 @@ I'll explain how I implemented Merge Sort, since that's more tricky than Inserti
 
 #### Numeric Comparison
 
-I implemented a numeric comparison type, `Cmp<A, B>` between any two integers. If `A < B`, it returns -1. If they are equal, 0 is returned. If `A > B`, 1 is returned. It uses the following logic:
+I implemented a numeric comparison type, `Cmp<A, B>` between any two integers. If `A < B`, it evaluates to -1. If they are equal, it evaluates to 0. If `A > B`, it evaluates to 1. It uses the following logic:
 
 -   WLOG, If A is negative but B is non-negative, B is bigger. I determine whether a number is negative by casting it a string and pattern matching to `-${infer A}`. If it matches, it's negative.
 -   If A and B are both negative, return `Cmp<Abs<B>, Abs<A>>`, where `Abs<T>` computes the absolute value of some integer. The implementation of `Abs` can be found in `math.ts` which is fairly simple to read.
@@ -144,20 +144,55 @@ I figured I could optimize my types by generating traces while running `tsc`. I 
 ./node_modules/typescript/bin/tsc -p . --generateTrace traces/
 ```
 
-I loaded `traces/trace.json` into [Perfetto](https://ui.perfetto.dev/), and saw that my original `MergeSort` type took ~100ms to compile. And there was a lot of recursion:
+I loaded `traces/trace.json` into [Perfetto](https://ui.perfetto.dev/), looked for calls that seemed like they took relatively long, and made the following improvements.
 
-![Screenshot from the Perfetto UI showing that the MergeSort file takes 100ms to evaluate, and has too many recursive calls relating to type inference](./images/slow_mergesort.png)
+##### Computing Absolute Values Faster
 
-After making a few tweaks, I got `MergeSort`'s `checkSourceFile` call down to less than 10ms:
+Because this sorting implementation takes the absolute value of negative numbers to compare them (see `Cmp` in the [Numeric Comparison](#numeric-comparison) section), we need an `Abs` type. Here was my first implementation of it:
 
-![Screenshot from the Perfetto UI showing that the MergeSort file takes 9ms to evaluate](./images/fast_mergesort.png)
+```ts
+type Abs<T extends number> = `${T}` extends `-${infer Rest extends number}`
+    ? Rest // Crap, this is a string
+    : T // Yay, a number
+```
 
-Finally, I noticed that about ~800ms were spent compiling `dom.d.ts`, so I avoided doing that extra work by setting the environment to `ES5`. I also set `noEmit` to true, which saved ~15 milliseconds (the JS files were anyway empty). In total, I was able to bring "compilation" (the PL people will hurt me for using that word, since nothing is being compiled... I think) down by ~105ms, which is a 20% decrease!
+This situation isn't great: `Abs` either returns a string ("Crap") or a number ("Yay"). I then wrote an `AtoI` function that would take in a string and evaluate to a number; it did so using recursion in such a way that casting a string `N` to a number would make `N` recursive calls. This was pretty slow:
 
-Eventually, I'll discuss:
+(TODO: Image of this being slow.)
 
--   Not using `AtoI`; upgrading to 4.8
--   Not repeating work in `MergeSort`
+Then, I realized that in TypeScript 4.8, [better inference was introduced](https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#improved-inference-for-infer-types-in-template-string-types) for `infer` types. So, I upgraded to the version 4.8 beta, reverted to my original code without `AtoI`, and saw a MASSIVE (TODO, quantity) performance boost!
+
+##### Avoiding Repeated Work with "Intermediate" Variables
+
+At first, my `MergeSort` type was approximately the following (where `Split` was described [earlier](#array-splitting)):
+
+```ts
+// Omitting the base case of T.length < 2 for simplicity here
+// The actual code does have it
+type MergeSort<T> = MergeSort<Split<T>[0], Split<T>[1]>
+```
+
+See what's wrong here? We're calling `Split` twice. I had the idea to "refactor" this into a temporary variable introduced in the type signature (PL folks, I'm sure my terminology is wrong here; please do not hurt/make fun of/call me out/etc. on PL Twitter):
+
+```ts
+type MergeSort<T, S = Split<T>> = Merge<MergeSort<S[0]>, MergeSort<S[1]>>
+```
+
+Turns out this doesn't work! I wasn't able to determine why, but TypeScript seems to think that this is infinitely recursive. My second attempt at doing this worked:
+
+```ts
+// Again, this code is an approximation.
+// Check the source if you want the real deal.
+type MergeSort<T> = Split<T> extends infer S
+    ? Merge<MergeSort<S[0]>, MergeSort<S[1]>>
+    : T // Will never happen
+```
+
+The main takeaway is that you can introduce "variables" by doing an operation, saying that it should `extend infer SomeVariable`, and then using `SomeVariable` in multiple places.
+
+##### Skipping Compilation of Irrelevant Files
+
+And for some low hanging fruit, I noticed that about ~800ms were spent compiling `dom.d.ts`, so I avoided doing that extra work by setting the environment to `ES5`. I also set `noEmit` to true, which saved ~15 milliseconds (the JS files were anyway empty). In total, I was able to bring "compilation" (the PL people will hurt me for using that word, since nothing is being compiled... I think) down by ~105ms, which is a 20% decrease!
 
 ### Playing with This
 
